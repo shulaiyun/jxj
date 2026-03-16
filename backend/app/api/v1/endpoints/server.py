@@ -15,19 +15,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 def verify_mu_key(
-    token_query: str | None = None,
+    request: Request,
     authorization: str | None = Header(None)
 ):
     """验证后端节点通信密钥 ( MU_KEY )"""
     expected_key = getattr(settings, "MU_KEY", "NextGenPanel123")
     
-    # Check query param first (Xboard/V2board commonly use ?token=xxx)
-    if token_query and token_query == expected_key:
+    # Check query param first
+    token_query = request.query_params.get("token")
+    if token_query and token_query.strip() == expected_key:
         return True
         
     # Then check header
     if authorization:
-        token_header = authorization.replace("Bearer ", "").replace("Token ", "")
+        token_header = authorization.replace("Bearer", "").replace("Token", "").strip()
         if token_header == expected_key:
             return True
             
