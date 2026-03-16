@@ -90,14 +90,22 @@ async def get_node_config(
     if not node:
         raise HTTPException(status_code=404, detail="Node not found or disabled")
 
+    # XrayR / V2board format expects specific fields
     return {
         "msg": "ok",
         "data": {
             "id": node.id,
-            "type": "v2ray" if node.protocol == "vless" else node.protocol,
-            "server_port": node.port,
+            "name": node.name,
+            "type": "vless" if node.protocol == "vless" else node.protocol,
             "server": node.host,
-            "host": node.host
+            "host": node.host,
+            "port": node.port, 
+            "server_port": node.port, # Some versions of XrayR look for server_port
+            "network": "tcp",
+            "tls": 1,
+            "tls_servername": node.reality_server_names.split(',')[0] if node.reality_server_names else node.host,
+            "reality_public_key": node.reality_public_key or "",
+            "reality_short_id": node.reality_short_id or ""
         }
     }
 
