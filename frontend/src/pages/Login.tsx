@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { authApi } from '../lib/api';
@@ -10,15 +10,16 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
       await authApi.login(email, password);
       navigate('/dashboard');
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || '登录失败，请检查邮箱和密码';
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { detail?: string } } };
+      const msg = apiError.response?.data?.detail || '登录失败，请检查邮箱和密码';
       setError(msg);
     } finally {
       setLoading(false);
@@ -33,7 +34,8 @@ const Login = () => {
       </div>
 
       {error && (
-        <div className="mb-4 flex items-center gap-2 p-3 rounded-xl text-sm text-red-400" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+        <div className="mb-4 flex items-center gap-2 p-3 rounded-xl text-sm text-red-400"
+          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
           <AlertCircle size={16} className="shrink-0" />
           {error}
         </div>
@@ -49,7 +51,7 @@ const Login = () => {
             <input
               type="email"
               className="input-field pl-11"
-              placeholder="admin@nextgen.cc"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -78,11 +80,10 @@ const Login = () => {
         </div>
 
         <button type="submit" disabled={loading} className="w-full btn-primary mt-8 group">
-          {loading ? (
-            <Loader2 size={20} className="animate-spin" />
-          ) : (
-            <>Sign In <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
-          )}
+          {loading
+            ? <Loader2 size={20} className="animate-spin" />
+            : <><span>Sign In</span> <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
+          }
         </button>
       </form>
 
