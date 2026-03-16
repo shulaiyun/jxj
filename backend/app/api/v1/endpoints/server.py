@@ -90,10 +90,13 @@ async def get_node_config(
     if not node:
         raise HTTPException(status_code=404, detail="Node not found or disabled")
 
-    # XrayR / V2board format expects fields at the root of the JSON response
-    # It parses them via `serverConfig` struct in newV2board/model.go
-    return {
-        "server_port": node.port, 
+    # 提取端口，如果数据库里因为意外填成了0或者空，强制给一个443防呆
+    port_val = node.port if node.port and int(node.port) > 0 else 443
+    
+    # 构建基础配置字典
+    config_data = {
+        "server_port": port_val, 
+        "port": port_val,
         "tls": 1 if node.protocol != "vless" else (2 if node.reality_public_key else 1),
         "network": "tcp",
         "network_settings": {
@@ -101,7 +104,7 @@ async def get_node_config(
             "host": node.host
         },
         "tls_settings": {
-            "server_port": str(node.port),
+            "server_port": str(port_val),
             "dest": node.host,
             "xver": 0,
             "server_name": node.reality_server_names.split(',')[0] if node.reality_server_names else node.host,
@@ -109,6 +112,14 @@ async def get_node_config(
             "short_id": node.reality_short_id or ""
         }
     }
+
+    # Omni-compatible response: XrayR newV2board 解析根目录，而旧版或某些魔改版 V2board 解析 data 目录
+    # 这里我们在根节点和 data 字典里各放一份，做到绝对兼容
+    response_payload = config_data.copy()
+    response_payload["msg"] = "ok"
+    response_payload["data"] = config_data
+    
+    return response_payload
 
 
 @router.post("/UniProxy/push")
