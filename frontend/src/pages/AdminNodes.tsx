@@ -144,7 +144,7 @@ const AdminNodes = () => {
                                     {node.protocol === 'vless' ? <ShieldAlert size={18} /> : <Server size={18} />}
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-white text-base">{node.name}</p>
+                                    <p className="font-semibold text-white text-base">[{node.id}] {node.name}</p>
                                     <p className="text-xs text-white/40 font-mono">{node.host}</p>
                                 </div>
                             </div>

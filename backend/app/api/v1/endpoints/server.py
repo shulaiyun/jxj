@@ -75,6 +75,31 @@ async def get_node_users(
         "data": data
     }
 
+@router.get("/UniProxy/config")
+async def get_node_config(
+    node_id: int, 
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(verify_mu_key)
+):
+    """
+    XrayR 获取节点配置接口
+    """
+    result_node = await db.execute(select(Node).where(Node.id == node_id, Node.is_active == True))
+    node = result_node.scalar_one_or_none()
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found or disabled")
+
+    return {
+        "msg": "ok",
+        "data": {
+            "id": node.id,
+            "type": "v2ray" if node.protocol == "vless" else node.protocol,
+            "server_port": node.port,
+            "server": node.host,
+            "host": node.host
+        }
+    }
+
 
 @router.post("/UniProxy/push")
 async def submit_node_traffic(

@@ -161,6 +161,14 @@ export const adminApi = {
     const res = await api.post('/nodes', data);
     return res.data;
   },
+  updateNode: async (id: number, data: Record<string, unknown>) => {
+    const res = await api.put(`/nodes/${id}`, data);
+    return res.data;
+  },
+  deleteNode: async (id: number) => {
+    const res = await api.delete(`/nodes/${id}`);
+    return res.data;
+  },
   createPlan: async (data: Record<string, unknown>) => {
     const res = await api.post('/plans', data);
     return res.data;
