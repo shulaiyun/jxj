@@ -1,12 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Activity, Shield, LogOut, Menu, X, MessageSquareHeart } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Activity, Shield, LogOut, Menu, X, MessageSquareHeart, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIAssistant from '../components/AIAssistant';
+import { userApi } from '../lib/api';
 
 const DashboardLayout = ({ isAdmin = false }: { isAdmin?: boolean }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState('user@nextgen.cc');
+
+  useEffect(() => {
+    // Check if the current logged-in user is an admin
+    userApi.me()
+      .then(res => {
+        setUserIsAdmin(res.is_admin);
+        if (res.email) setUserEmail(res.email);
+      })
+      .catch(() => {});
+  }, []);
 
   const userNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -24,6 +37,11 @@ const DashboardLayout = ({ isAdmin = false }: { isAdmin?: boolean }) => {
   ];
 
   const navigation = isAdmin ? adminNavigation : userNavigation;
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    window.location.href = '/login';
+  };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row relative">
@@ -87,18 +105,33 @@ const DashboardLayout = ({ isAdmin = false }: { isAdmin?: boolean }) => {
                 })}
             </nav>
 
-            {/* Bottom Actions */}
-            <div className="mt-auto pt-6 border-t border-white/10">
-                <div className="px-4 py-3 flex items-center gap-3 rounded-xl cursor-pointer text-white/60 hover:text-white hover:bg-white/5 transition-all">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-accent"></div>
-                <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">Administrator</p>
-                    <p className="text-xs text-white/40 truncate">admin@nextgen.cc</p>
+            {/* Admin Switcher & Bottom Actions */}
+            <div className="mt-auto pt-6 border-t border-white/10 space-y-2">
+                
+                {/* Switcher Button for Admins */}
+                {userIsAdmin && (
+                    <Link 
+                        to={isAdmin ? '/dashboard' : '/admin'}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white font-medium shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-gradient-to-r from-primary/80 to-accent/80 hover:from-primary hover:to-accent transition-all duration-300"
+                    >
+                        <Settings size={18} />
+                        {isAdmin ? 'Back to Dashboard' : 'Enter Admin Panel'}
+                    </Link>
+                )}
+
+                <div className="px-4 py-3 flex items-center gap-3 rounded-xl cursor-default text-white/60 transition-all">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-tr from-primary to-accent text-white font-bold text-sm">
+                        {userEmail[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">{isAdmin ? 'Administrator' : 'User'}</p>
+                        <p className="text-xs text-white/40 truncate">{userEmail}</p>
+                    </div>
                 </div>
-                </div>
-                <button className="w-full mt-2 flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-all font-medium">
-                <LogOut size={20} />
-                Logout
+                
+                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-all font-medium">
+                    <LogOut size={20} />
+                    Logout
                 </button>
             </div>
             </motion.div>
@@ -117,4 +150,3 @@ const DashboardLayout = ({ isAdmin = false }: { isAdmin?: boolean }) => {
 };
 
 export default DashboardLayout;
-
