@@ -2,35 +2,38 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
 
-# Shared properties
-class UserBase(BaseModel):
-    email: EmailStr
-    is_active: Optional[bool] = True
-    is_admin: Optional[bool] = False
+# ── 注册/创建用户入参 ────────────────────────────────────────────────────────
 
-# Properties to receive via API on creation
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    email: EmailStr
     password: str
     invite_code: Optional[str] = None
 
-# Properties to receive via API on update
-class UserUpdate(UserBase):
+# ── 修改用户入参 ─────────────────────────────────────────────────────────────
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
     password: Optional[str] = None
 
-class UserInDBBase(UserBase):
+# ── API 返回模型（注册/查询用户时的响应体）────────────────────────────────────
+
+class UserOut(BaseModel):
+    """
+    NOTE: 字段名必须与 User 数据库模型完全匹配，否则序列化时会抛 ValidationError
+    """
     id: int
-    balance: float
-    commission_balance: float
-    u: int
-    d: int
-    transfer_enable: int
+    email: str
     uuid: str
-    invite_code: Optional[str] = None
+    balance: float
+    traffic_used_bytes: int
+    traffic_total_bytes: int
+    expire_at: Optional[datetime] = None
+    is_active: bool
+    is_admin: bool
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
-# Additional properties to return via API
-class User(UserInDBBase):
-    pass
+# 保持向后兼容的别名
+User = UserOut
