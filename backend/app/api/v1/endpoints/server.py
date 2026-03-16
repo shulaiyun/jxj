@@ -90,10 +90,10 @@ async def get_node_config(
     if not node:
         raise HTTPException(status_code=404, detail="Node not found or disabled")
 
-    # XrayR / V2board format expects specific fields
+    # XrayR / V2board format expects an array of configurations under data
     return {
         "msg": "ok",
-        "data": {
+        "data": [{
             "id": node.id,
             "name": node.name,
             "type": "vless" if node.protocol == "vless" else node.protocol,
@@ -106,7 +106,7 @@ async def get_node_config(
             "tls_servername": node.reality_server_names.split(',')[0] if node.reality_server_names else node.host,
             "reality_public_key": node.reality_public_key or "",
             "reality_short_id": node.reality_short_id or ""
-        }
+        }]
     }
 
 
