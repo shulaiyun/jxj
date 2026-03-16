@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Header, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import or_
 from typing import List, Dict, Any
 from datetime import datetime
 
@@ -50,12 +51,12 @@ async def get_node_users(
     if not node:
         raise HTTPException(status_code=404, detail="Node not found or disabled")
 
-    # 查询所有有效用户
+    # 查询所有有效用户 (expire_at 为 NULL 表示永不过期)
     now = datetime.utcnow()
     result_users = await db.execute(
         select(User).where(
             User.is_active == True,
-            User.expire_at > now,
+            or_(User.expire_at == None, User.expire_at > now),
             User.traffic_used_bytes < User.traffic_total_bytes
         )
     )
