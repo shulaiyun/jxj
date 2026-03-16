@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, plans, nodes, tickets, orders, users
+from app.api.v1.endpoints import auth, plans, nodes, tickets, orders, users, sub
 
 api_router = APIRouter()
 
@@ -10,3 +10,4 @@ api_router.include_router(plans.router,   prefix="/plans",   tags=["套餐"])
 api_router.include_router(nodes.router,   prefix="/nodes",   tags=["节点"])
 api_router.include_router(tickets.router, prefix="/tickets", tags=["工单"])
 api_router.include_router(orders.router,  prefix="/orders",  tags=["订单"])
+api_router.include_router(sub.router,     prefix="/sub",     tags=["订阅"])
