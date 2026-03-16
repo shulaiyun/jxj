@@ -40,7 +40,11 @@ const Store = () => {
     setPurchasing(planId);
     try {
       const result = await ordersApi.checkout(planId, period);
-      alert(`订单已创建！订单号: ${result.trade_no}\n金额: ¥${result.amount}\n支付对接将在第3阶段完成。`);
+      if (result.redirect_url) {
+        window.location.href = result.redirect_url;
+      } else {
+        alert(`订单已创建！订单号: ${result.trade_no}\n暂未配置支付网关。`);
+      }
     } catch (err: any) {
       alert(err.response?.data?.detail || '下单失败，请重试');
     } finally {
@@ -87,7 +91,7 @@ const Store = () => {
 
       {plans.length === 0 ? (
         <div className="glass-panel p-12 text-center text-white/40">
-          <p>暂无套餐，管理员尚未创建套餐</p>
+          <p>暂无可用套餐，请联系管理员</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
