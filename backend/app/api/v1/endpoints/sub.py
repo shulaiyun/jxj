@@ -12,8 +12,8 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.node import Node
 from app.api.deps import get_current_active_user
-from app.core.security import verify_token
 from app.core.config import settings
+import jwt
 
 router = APIRouter()
 
@@ -156,8 +156,9 @@ async def get_subscription(
     也可以通过 url ?flag=clash 强制格式。
     """
     # 1. 验证 token 提取用户
-    payload = verify_token(token)
-    if not payload:
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired subscription token")
         
     user_id = payload.get("sub")
