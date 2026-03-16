@@ -73,7 +73,7 @@ async def get_node_users(
 
     return {
         "msg": "ok",
-        "data": data
+        "users": data
     }
 
 @router.get("/UniProxy/config")
@@ -90,23 +90,24 @@ async def get_node_config(
     if not node:
         raise HTTPException(status_code=404, detail="Node not found or disabled")
 
-    # XrayR / V2board format expects an array of configurations under data
+    # XrayR / V2board format expects fields at the root of the JSON response
+    # It parses them via `serverConfig` struct in newV2board/model.go
     return {
-        "msg": "ok",
-        "data": [{
-            "id": node.id,
-            "name": node.name,
-            "type": "vless" if node.protocol == "vless" else node.protocol,
-            "server": node.host,
-            "host": node.host,
-            "port": node.port, 
-            "server_port": node.port, # Some versions of XrayR look for server_port
-            "network": "tcp",
-            "tls": 1,
-            "tls_servername": node.reality_server_names.split(',')[0] if node.reality_server_names else node.host,
-            "reality_public_key": node.reality_public_key or "",
-            "reality_short_id": node.reality_short_id or ""
-        }]
+        "server_port": node.port, 
+        "tls": 1 if node.protocol != "vless" else (2 if node.reality_public_key else 1),
+        "network": "tcp",
+        "network_settings": {
+            "path": "/",
+            "host": node.host
+        },
+        "tls_settings": {
+            "server_port": str(node.port),
+            "dest": node.host,
+            "xver": 0,
+            "server_name": node.reality_server_names.split(',')[0] if node.reality_server_names else node.host,
+            "private_key": node.reality_public_key or "",
+            "short_id": node.reality_short_id or ""
+        }
     }
 
 
@@ -119,15 +120,12 @@ async def submit_node_traffic(
 ):
     """
     XrayR 等后端面板上报流量接口
-    接收格式通常为 Array: [{"user_id": 1, "u": 1024, "d": 2048}]
+    接收格式 (newV2board): {"uid1": [u, d], "uid2": [u, d]}
     """
     try:
         payload = await request.json()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
-
-    if not isinstance(payload, list):
-        payload = [payload]
 
     # TODO: 节点倍率计算 (获取节点的 traffic_multiplier)
     result_node = await db.execute(select(Node).where(Node.id == node_id))
@@ -135,22 +133,30 @@ async def submit_node_traffic(
     multiplier = node.traffic_multiplier if node else 1.0
 
     # 批量更新流量
-    for item in payload:
-        uid = item.get("user_id")
-        up = int(item.get("u", 0))
-        down = int(item.get("d", 0))
+    if isinstance(payload, dict):
+        for uid_str, traffic in payload.items():
+            if not isinstance(traffic, list) or len(traffic) < 2:
+                continue
+            
+            try:
+                uid = int(uid_str)
+            except ValueError:
+                continue
+                
+            up = int(traffic[0])
+            down = int(traffic[1])
         
-        if uid is None or (up == 0 and down == 0):
-            continue
+            if uid is None or (up == 0 and down == 0):
+                continue
 
-        total_usage = int((up + down) * multiplier)
+            total_usage = int((up + down) * multiplier)
 
-        result_user = await db.execute(select(User).where(User.id == uid))
-        user = result_user.scalar_one_or_none()
-        
-        if user:
-            # 累加流量
-            user.traffic_used_bytes += total_usage
+            result_user = await db.execute(select(User).where(User.id == uid))
+            user = result_user.scalar_one_or_none()
+            
+            if user:
+                # 累加流量
+                user.traffic_used_bytes += total_usage
 
     await db.commit()
 
