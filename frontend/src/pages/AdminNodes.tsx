@@ -13,6 +13,9 @@ interface Node {
   flag_emoji: string | null;
   traffic_multiplier: number;
   is_active: boolean;
+  reality_public_key?: string | null;
+  reality_server_names?: string | null;
+  reality_short_id?: string | null;
 }
 
 const AdminNodes = () => {
@@ -31,7 +34,10 @@ const AdminNodes = () => {
     port: 443,
     protocol: 'vless',
     traffic_multiplier: 1.0,
-    is_active: true
+    is_active: true,
+    reality_public_key: '',
+    reality_server_names: '',
+    reality_short_id: ''
   });
 
   const fetchNodes = () => {
@@ -49,7 +55,8 @@ const AdminNodes = () => {
   const openCreateModal = () => {
     setEditingNode(null);
     setFormData({
-      name: '', host: '', port: 443, protocol: 'vless', traffic_multiplier: 1.0, is_active: true
+      name: '', host: '', port: 443, protocol: 'vless', traffic_multiplier: 1.0, is_active: true,
+      reality_public_key: '', reality_server_names: '', reality_short_id: ''
     });
     setIsModalOpen(true);
   };
@@ -58,7 +65,10 @@ const AdminNodes = () => {
     setEditingNode(node);
     setFormData({
       name: node.name, host: node.host, port: node.port, protocol: node.protocol, 
-      traffic_multiplier: node.traffic_multiplier, is_active: node.is_active
+      traffic_multiplier: node.traffic_multiplier, is_active: node.is_active,
+      reality_public_key: node.reality_public_key || '',
+      reality_server_names: node.reality_server_names || '',
+      reality_short_id: node.reality_short_id || ''
     });
     setIsModalOpen(true);
   };
@@ -254,6 +264,27 @@ const AdminNodes = () => {
                             <option value="trojan">Trojan</option>
                         </select>
                     </div>
+
+                    {/* VLESS-Reality 专属配置区 */}
+                    {formData.protocol === 'vless' && (
+                    <div className="space-y-4 p-4 rounded-xl border border-purple-500/20 bg-purple-500/5">
+                        <p className="text-xs text-purple-400 font-semibold uppercase tracking-wider">Reality Configuration</p>
+                        <div>
+                            <label className="input-label">Reality Public Key</label>
+                            <input type="text" className="input-field bg-black/40 font-mono text-xs" placeholder="由 XrayR x25519 生成的 Public Key" value={formData.reality_public_key} onChange={e => setFormData({...formData, reality_public_key: e.target.value})} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="input-label">Server Names (SNI)</label>
+                                <input type="text" className="input-field bg-black/40 font-mono text-xs" placeholder="www.amazon.com" value={formData.reality_server_names} onChange={e => setFormData({...formData, reality_server_names: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="input-label">Short ID</label>
+                                <input type="text" className="input-field bg-black/40 font-mono text-xs" placeholder="0123456789abcdef" value={formData.reality_short_id} onChange={e => setFormData({...formData, reality_short_id: e.target.value})} />
+                            </div>
+                        </div>
+                    </div>
+                    )}
 
                     <div className="p-6 border-t border-white/10 flex justify-end gap-3 bg-black/20 -mx-6 -mb-6 mt-6">
                         <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
