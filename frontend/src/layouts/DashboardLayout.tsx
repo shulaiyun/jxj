@@ -17,7 +17,9 @@ const DashboardLayout = ({ isAdmin = false }: { isAdmin?: boolean }) => {
 
   const adminNavigation = [
     { name: 'Overview', href: '/admin', icon: LayoutDashboard },
-    { name: 'Node Management', href: '/admin/nodes', icon: Activity },
+    { name: 'Users', href: '/admin/users', icon: Shield },
+    { name: 'Plans', href: '/admin/plans', icon: ShoppingCart },
+    { name: 'Nodes', href: '/admin/nodes', icon: Activity },
     { name: 'System Logs', href: '/admin/logs', icon: Shield },
   ];
 

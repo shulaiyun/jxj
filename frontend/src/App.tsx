@@ -10,6 +10,8 @@ import Tickets from './pages/Tickets';
 import Admin from './pages/Admin';
 import AdminNodes from './pages/AdminNodes';
 import AdminLogs from './pages/AdminLogs';
+import AdminUsers from './pages/AdminUsers';
+import AdminPlans from './pages/AdminPlans';
 
 // Landing page placeholder
 const Landing = () => (
@@ -62,6 +64,8 @@ function App() {
         {/* Admin dashboard routes */}
         <Route path="/admin" element={<DashboardLayout isAdmin={true} />}>
           <Route index element={<Admin />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="plans" element={<AdminPlans />} />
           <Route path="nodes" element={<AdminNodes />} />
           <Route path="logs" element={<AdminLogs />} />
         </Route>
