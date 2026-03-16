@@ -33,6 +33,7 @@ def build_vless_uri(node: Node, user: User) -> str:
         if node.reality_short_id:
             params.append(f"sid={node.reality_short_id}")
         params.append("type=tcp")
+        params.append("flow=xtls-rprx-vision")
         
     query = "&".join(params)
     import urllib.parse
@@ -90,6 +91,7 @@ def generate_clash_sub(nodes: list[Node], user: User) -> str:
                 "network": "tcp",
                 "udp": True,
                 "tls": True,
+                "flow": "xtls-rprx-vision",
                 "client-fingerprint": "chrome",
                 "servername": n.reality_server_names.split(',')[0] if n.reality_server_names else n.host,
                 "reality-opts": {
@@ -171,9 +173,9 @@ async def get_subscription(
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="User not found or banned")
         
-    # 2. 检查用户是否拥有有效订阅
+    # 2. 检查用户是否拥有有效订阅 (expire_at 为 NULL 表示永不过期)
     now = datetime.utcnow()
-    if not user.expire_at or user.expire_at < now:
+    if user.expire_at is not None and user.expire_at < now:
         # 订阅过期，返回空或者提示节点
         return PlainTextResponse(base64.b64encode(b"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:80?encryption=none&security=none&type=tcp#Subscription Expired").decode('utf-8'))
         
@@ -193,16 +195,18 @@ async def get_subscription(
     # 4. 路由客户端格式
     if "clash" in ua or "meta" in ua or "mihomo" in ua:
         content = generate_clash_sub(nodes, user)
+        expire_ts = int(user.expire_at.timestamp()) if user.expire_at else 0
         headers = {
             "Content-Type": "text/yaml; charset=utf-8",
-            "Subscription-Userinfo": f"upload=0; download={user.traffic_used_bytes}; total={user.traffic_total_bytes}; expire={int(user.expire_at.timestamp())}"
+            "Subscription-Userinfo": f"upload=0; download={user.traffic_used_bytes}; total={user.traffic_total_bytes}; expire={expire_ts}"
         }
         return PlainTextResponse(content, headers=headers)
         
     # 默认 fallback 为 Base64 (V2rayN / V2rayNG)
     content = generate_base64_sub(nodes, user)
+    expire_ts = int(user.expire_at.timestamp()) if user.expire_at else 0
     headers = {
         "Content-Type": "text/plain; charset=utf-8",
-        "Subscription-Userinfo": f"upload=0; download={user.traffic_used_bytes}; total={user.traffic_total_bytes}; expire={int(user.expire_at.timestamp())}"
+        "Subscription-Userinfo": f"upload=0; download={user.traffic_used_bytes}; total={user.traffic_total_bytes}; expire={expire_ts}"
     }
     return PlainTextResponse(content, headers=headers)
