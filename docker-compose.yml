@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:10.6
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-nextgen_root_secure}
+      MYSQL_DATABASE: ${DB_DATABASE:-nextgen_panel}
+      MYSQL_USER: ${DB_USER:-nextgen}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-nextgen_db_pass}
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - nextgen_net
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nextgen_net
+
+  api:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=mysql+aiomysql://${DB_USER:-nextgen}:${DB_PASSWORD:-nextgen_db_pass}@db:3306/${DB_DATABASE:-nextgen_panel}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-SUPER_SECRET_KEY_PLEASE_CHANGE_IN_PRODUCTION_b64}
+      - PANEL_NAME=${PANEL_NAME:-NextGen Panel}
+      - PANEL_DOMAIN=${PANEL_DOMAIN:-localhost}
+      - EPAY_API_URL=${EPAY_API_URL:-}
+      - EPAY_PID=${EPAY_PID:-}
+      - EPAY_KEY=${EPAY_KEY:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/storage:/app/storage
+    networks:
+      - nextgen_net
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+    networks:
+      - nextgen_net
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  nextgen_net:
+    driver: bridge
