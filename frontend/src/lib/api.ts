@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// NOTE: 生产环境通过 VITE_API_URL 环境变量注入，本地开发默认指向后端容器端口
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+// NOTE: 生产环境通过 VITE_API_URL 环境变量注入，本地开发如果不配，则使用相对路径 /api/v1
+// Nginx 会把 /api/ 请求反向代理给后端的 api 容器，解决跨域和 localhost 访问问题
+const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
 export const api = axios.create({
   baseURL: API_BASE,
