@@ -23,6 +23,9 @@ class NodeOut(BaseModel):
     flag_emoji: str | None
     traffic_multiplier: float
     is_active: bool
+    reality_public_key: str | None = None
+    reality_server_names: str | None = None
+    reality_short_id: str | None = None
 
     class Config:
         from_attributes = True
