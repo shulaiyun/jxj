@@ -14,15 +14,9 @@ class Node(Base):
     flag_emoji = Column(String(10), nullable=True)
     traffic_multiplier = Column(Float, default=1.0)
 
-    # NOTE: VLESS-Reality 专属字段
-    reality_dest = Column(String(255), nullable=True)
-    reality_server_names = Column(String(500), nullable=True)
-    reality_public_key = Column(String(255), nullable=True)
-    reality_short_id = Column(String(64), nullable=True)
-
-    # NOTE: Hysteria2 专属字段
-    hysteria_up_mbps = Column(Integer, nullable=True)
-    hysteria_down_mbps = Column(Integer, nullable=True)
+    # 协议扩展配置 (VLESS-Reality, Hysteria2, Trojan 等专属配置全部放在此处编解码)
+    # JSON 类型适合长期扩展而不需要频繁化库表结构
+    protocol_config = Column(Text, nullable=True)
 
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
