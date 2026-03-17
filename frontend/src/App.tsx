@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AuthLayout from './layouts/AuthLayout';
 import DashboardLayout from './layouts/DashboardLayout';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -12,19 +13,6 @@ import AdminNodes from './pages/AdminNodes';
 import AdminLogs from './pages/AdminLogs';
 import AdminUsers from './pages/AdminUsers';
 import AdminPlans from './pages/AdminPlans';
-
-// Landing page placeholder
-const Landing = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
-    <div className="w-16 h-16 rounded-2xl mb-6 flex items-center justify-center shadow-2xl text-3xl" style={{ backgroundColor: 'var(--primary)' }}>N</div>
-    <h1 className="text-5xl font-bold text-white mb-4">NextGen Ecosystem</h1>
-    <p className="text-white/50 text-lg max-w-md mb-8">The next-generation, AI-powered proxy panel built for speed, security, and scale.</p>
-    <div className="flex gap-4">
-      <a href="/login" className="btn-primary px-8 py-3 rounded-xl font-semibold">Sign In</a>
-      <a href="/register" className="btn-secondary px-8 py-3 rounded-xl font-semibold">Get Started</a>
-    </div>
-  </div>
-);
 
 const NotFound = () => (
   <div className="min-h-screen flex flex-col items-center justify-center text-center">
@@ -45,7 +33,7 @@ function App() {
       </div>
 
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Home />} />
 
         {/* Auth routes */}
         <Route element={<AuthLayout />}>
