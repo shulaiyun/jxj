@@ -100,13 +100,14 @@ async def get_node_config(
         "port": port_val,
         "tls": 1 if node.protocol != "vless" else (2 if node.reality_public_key else 1),
         "network": "tcp",
+        "flow": "xtls-rprx-vision",
         "network_settings": {
             "path": "/",
             "host": node.host
         },
         "tls_settings": {
             "server_port": str(port_val),
-            "dest": node.host,
+            "dest": node.reality_server_names.split(',')[0] if node.reality_server_names else node.host,
             "xver": 0,
             "server_name": node.reality_server_names.split(',')[0] if node.reality_server_names else node.host,
             "private_key": node.reality_public_key or "",
